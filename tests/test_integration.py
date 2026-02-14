@@ -82,7 +82,6 @@ def query_tester(client, query, expected_file, n_results=5):
 #     query_tester(client, "ML Engineering", "sample3.txt", n_results=5)
 
 
-
 def test_some_queries(client):
     """Test search endpoint with various queries - tests functionality not specific rankings."""
 
@@ -124,9 +123,6 @@ def test_some_queries(client):
 
     # At least some results should be different
     assert results1_ids != results2_ids, "Different queries should return different results"
-
-
-
 
 
 def test_search_endpoint(client):

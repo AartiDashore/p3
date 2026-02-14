@@ -56,21 +56,19 @@ def test_hybrid_search_effectiveness():
     assert len(results_full) > 0, "Full system should return results"
 
     # Verify field presence
-    assert all(
-        "distance" in doc for doc in results_semantic
-    ), "Semantic results should have distance"
+    assert all("distance" in doc for doc in results_semantic), (
+        "Semantic results should have distance"
+    )
 
-    assert all(
-        "rerank_score" in doc for doc in results_rerank
-    ), "Reranked results should have rerank_score"
+    assert all("rerank_score" in doc for doc in results_rerank), (
+        "Reranked results should have rerank_score"
+    )
 
-    assert all(
-        "rrf_score" in doc for doc in results_hybrid
-    ), "Hybrid results should have rrf_score"
+    assert all("rrf_score" in doc for doc in results_hybrid), "Hybrid results should have rrf_score"
 
-    assert all(
-        "rrf_score" in doc and "rerank_score" in doc for doc in results_full
-    ), "Full system should have both rrf_score and rerank_score"
+    assert all("rrf_score" in doc and "rerank_score" in doc for doc in results_full), (
+        "Full system should have both rrf_score and rerank_score"
+    )
 
     # Get top result chunks for comparison
     top_chunks_semantic = [doc["metadata"]["chunk"] for doc in results_semantic[:3]]
@@ -157,7 +155,9 @@ def test_hybrid_search_effectiveness():
         for i, doc in enumerate(results[:3], 1):
             text_lower = doc["text"].lower()
             matches = [kw for kw in keywords if kw in text_lower]
-            print(f"  Result {i} (chunk {doc['metadata']['chunk']}): {matches if matches else 'no keywords'}")
+            print(
+                f"  Result {i} (chunk {doc['metadata']['chunk']}): {matches if matches else 'no keywords'}"
+            )
 
     print("\n" + "=" * 80)
     print("Hybrid search successfully demonstrated")
@@ -191,9 +191,9 @@ def test_hybrid_rrf_boosting():
     assert all("rrf_score" in doc for doc in results), "Should have rrf_score"
 
     rrf_scores = [doc["rrf_score"] for doc in results]
-    assert rrf_scores == sorted(
-        rrf_scores, reverse=True
-    ), "Results should be sorted by RRF score (highest first)"
+    assert rrf_scores == sorted(rrf_scores, reverse=True), (
+        "Results should be sorted by RRF score (highest first)"
+    )
 
     print("\n" + "=" * 80)
     print("RRF BOOSTING DEMONSTRATION")

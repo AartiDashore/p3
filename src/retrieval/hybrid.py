@@ -78,9 +78,7 @@ class HybridSearcher:
         scores = self.bm25_index.get_scores(tokenized_query)
 
         # Get top N document indices
-        top_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[
-            :n_results
-        ]
+        top_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:n_results]
 
         # Return documents with BM25 scores
         results = []

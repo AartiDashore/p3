@@ -150,7 +150,9 @@ def test_with_chunks(retriever):
         passage = result["text"]
         # assert "garlic" in passage or "crucifix" in passage or "vampire" in passage
         passage_lower = passage.lower()
-        assert "garlic" in passage_lower or "crucifix" in passage_lower or "vampire" in passage_lower
+        assert (
+            "garlic" in passage_lower or "crucifix" in passage_lower or "vampire" in passage_lower
+        )
 
     # running the test case, we discover the current best passages
     # (this may be brittle as we upgrade the embedding model)

@@ -7,6 +7,7 @@ Seattle University, ARIN 5360
 =190380
 @version: 3.0.0+w26
 """
+
 from pathlib import Path
 
 from retrieval.retriever import DocumentRetriever
@@ -46,20 +47,22 @@ def test_reranking_effectiveness():
 
     # Verify rerank_score field presence
     print(results_with_rerank[0])
-    assert all("rerank_score" in doc for doc in
-               results_with_rerank), "Reranked results should have rerank_score field"
-    assert not any("rerank_score" in doc for doc in
-                   results_no_rerank), "Non-reranked results should NOT have rerank_score field"
+    assert all("rerank_score" in doc for doc in results_with_rerank), (
+        "Reranked results should have rerank_score field"
+    )
+    assert not any("rerank_score" in doc for doc in results_no_rerank), (
+        "Non-reranked results should NOT have rerank_score field"
+    )
 
     # Get top result chunks for comparison
-    top_chunks_no_rerank = [doc["metadata"]["chunk"] for doc in
-                            results_no_rerank[:3]]
-    top_chunks_with_rerank = [doc["metadata"]["chunk"] for doc in
-                              results_with_rerank[:3]]
+    top_chunks_no_rerank = [doc["metadata"]["chunk"] for doc in results_no_rerank[:3]]
+    top_chunks_with_rerank = [doc["metadata"]["chunk"] for doc in results_with_rerank[:3]]
 
     # Verify reranking changes the order
-    assert top_chunks_no_rerank != top_chunks_with_rerank, f"Reranking should change result order. " \
-                                                           f"Without: {top_chunks_no_rerank}, With: {top_chunks_with_rerank}"
+    assert top_chunks_no_rerank != top_chunks_with_rerank, (
+        f"Reranking should change result order. "
+        f"Without: {top_chunks_no_rerank}, With: {top_chunks_with_rerank}"
+    )
 
     # Print comparison for visual inspection
     print("\n" + "=" * 80)

@@ -7,6 +7,7 @@ Seattle University, ARIN 5360
 =190380
 @version: 2.0.0+w26
 """
+
 from retrieval.embeddings import DocumentEmbedder
 from retrieval.hybrid import HybridSearcher
 from retrieval.loader import DocumentChunker, DocumentLoader
