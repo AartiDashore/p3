@@ -1,11 +1,11 @@
 """
 Simple unit tests for the DocumentRetriever class.
 
-@author:  Aarti Dashore, Alok Katiyar
+@author:  Aarti Dashore
 Seattle University, ARIN 5360
 @see: https://catalog.seattleu.edu/preview_course_nopop.php?catoid=55&coid
 =190380
-@version: 1.0.0+w26
+@version: 2.0.0+w26
 """
 
 from pathlib import Path
@@ -148,7 +148,9 @@ def test_with_chunks(retriever):
     # it seems likely that each passage has one of the key words from the query
     for result in results:
         passage = result["text"]
-        assert "garlic" in passage or "crucifix" in passage or "vampire" in passage
+        # assert "garlic" in passage or "crucifix" in passage or "vampire" in passage
+        passage_lower = passage.lower()
+        assert "garlic" in passage_lower or "crucifix" in passage_lower or "vampire" in passage_lower
 
     # running the test case, we discover the current best passages
     # (this may be brittle as we upgrade the embedding model)
