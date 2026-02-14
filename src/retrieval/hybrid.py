@@ -1,4 +1,10 @@
-"""Hybrid search combining BM25 keyword search with semantic search using RRF."""
+"""Hybrid search combining BM25 keyword search with semantic search using RRF.
+@author: Aarti Dashore
+Seattle University, ARIN 5360
+@see: https://catalog.seattleu.edu/preview_course_nopop.php?catoid=55&coid
+=190380
+@version: 2.0.0+w26
+"""
 
 from __future__ import annotations
 

@@ -1,6 +1,11 @@
 """
 Unit tests for retrieval.main (FastAPI module).
 
+@author: Aarti Dashore
+Seattle University, ARIN 5360
+@see: https://catalog.seattleu.edu/preview_course_nopop.php?catoid=55&coid=190380
+@version: 2.0.0+w26
+
 Covers:
 - lifespan() success + exception path
 - /health endpoint healthy + unhealthy paths

@@ -3,6 +3,11 @@ Integration test for hybrid search (BM25 + RRF).
 
 This test demonstrates that hybrid search improves retrieval when queries
 contain specific keywords that benefit from exact matching.
+
+@author: Aarti Dashore
+Seattle University, ARIN 5360
+@see: https://catalog.seattleu.edu/preview_course_nopop.php?catoid=55&coid=190380
+@version: 1.0.0+w26
 """
 
 from pathlib import Path

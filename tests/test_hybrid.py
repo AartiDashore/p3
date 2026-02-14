@@ -1,4 +1,11 @@
-"""Unit tests for HybridSearcher."""
+"""
+Unit tests for HybridSearcher.
+
+@author: Aarti Dashore
+Seattle University, ARIN 5360
+@see: https://catalog.seattleu.edu/preview_course_nopop.php?catoid=55&coid=190380
+@version: 1.0.0+w26
+"""
 
 from __future__ import annotations
 
