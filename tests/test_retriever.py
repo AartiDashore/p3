@@ -154,7 +154,7 @@ def test_with_chunks(retriever):
 
     # running the test case, we discover the current best passages
     # (this may be brittle as we upgrade the embedding model)
-    chunks = set(result["metadata"]["chunk"] for result in results)
+    chunks = {result["metadata"]["chunk"] for result in results}
     assert chunks & {373, 257, 568, 206}  # picked at least one of these
 
     results = retriever.search("what MSAI courses are 5 credits?")
