@@ -87,7 +87,7 @@ def test_hybrid_search_effectiveness():
     ]
 
     # At least some variation should exist
-    unique_orderings = len(set(tuple(x) for x in all_orderings))
+    unique_orderings = len({tuple(x) for x in all_orderings})
     assert unique_orderings > 1, (
         f"Different retrieval modes should produce different rankings. "
         f"All modes returned: {all_orderings}"
