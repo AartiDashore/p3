@@ -8,10 +8,11 @@ Seattle University, ARIN 5360
 @version: 2.0.0+w26
 """
 from retrieval.embeddings import DocumentEmbedder
-from retrieval.loader import DocumentChunker, DocumentLoader
-from retrieval.store import VectorStore
-from retrieval.reranker import CrossEncoderReranker
 from retrieval.hybrid import HybridSearcher
+from retrieval.loader import DocumentChunker, DocumentLoader
+from retrieval.reranker import CrossEncoderReranker
+from retrieval.store import VectorStore
+
 
 class DocumentRetriever:
     class DocumentRetriever:

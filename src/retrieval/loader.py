@@ -100,7 +100,7 @@ class DocumentLoader:
     def _load_text_file(self, filepath: Path) -> list[dict]:
         """Load a single text file."""
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 text = f.read().strip()
 
             if not text:

@@ -10,8 +10,6 @@ Seattle University, ARIN 5360
 
 from __future__ import annotations
 
-from typing import List, Union
-
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
@@ -34,7 +32,7 @@ class DocumentEmbedder:
         self.model_name = model_name
         self.model = SentenceTransformer(model_name)
 
-    def embed_documents(self, texts: List[str]) -> np.ndarray:
+    def embed_documents(self, texts: list[str]) -> np.ndarray:
         """
         Generate embeddings for a list of documents.
 
@@ -49,7 +47,7 @@ class DocumentEmbedder:
 
         return np.array(self.model.encode(texts, show_progress_bar=False))
 
-    def embed_query(self, queries: Union[str, List[str]]) -> np.ndarray:
+    def embed_query(self, queries: str | list[str]) -> np.ndarray:
         """
         Generate embedding(s) for query text.
 

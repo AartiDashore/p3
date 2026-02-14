@@ -85,7 +85,7 @@ def query_tester(client, query, expected_file, n_results=5):
 
 def test_some_queries(client):
     """Test search endpoint with various queries - tests functionality not specific rankings."""
-    
+
     # Test 1: Basic search returns correct structure
     response = client.post("/search", json={"query": "machine learning", "n_results": 5})
     assert response.status_code == 200
@@ -93,7 +93,7 @@ def test_some_queries(client):
     assert data["query"] == "machine learning"
     assert data["count"] == 5
     assert len(data["results"]) == 5
-    
+
     # Verify all results have required fields
     for result in data["results"]:
         assert "id" in result
@@ -102,26 +102,26 @@ def test_some_queries(client):
         assert "filename" in result["metadata"]
         # Should have either distance (semantic) or rerank_score (reranked)
         assert "distance" in result or "rerank_score" in result
-    
+
     # Test 2: Different query also works
     response = client.post("/search", json={"query": "Python programming", "n_results": 3})
     assert response.status_code == 200
     data = response.json()
     assert len(data["results"]) == 3
-    
+
     # Test 3: Technical query
     response = client.post("/search", json={"query": "vector embeddings", "n_results": 5})
     assert response.status_code == 200
     data = response.json()
     assert len(data["results"]) == 5
-    
+
     # Test 4: Verify different queries return different results
     response1 = client.post("/search", json={"query": "deployment", "n_results": 5})
     response2 = client.post("/search", json={"query": "vampire", "n_results": 5})
-    
+
     results1_ids = [r["id"] for r in response1.json()["results"]]
     results2_ids = [r["id"] for r in response2.json()["results"]]
-    
+
     # At least some results should be different
     assert results1_ids != results2_ids, "Different queries should return different results"
 
