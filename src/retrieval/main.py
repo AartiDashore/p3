@@ -117,7 +117,7 @@ async def search(request: SearchRequest):
         return SearchResponse(query=request.query, results=results, count=len(results))
     except Exception as e:
         logger.error(f"Search error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Search failed")
+        raise HTTPException(status_code=500, detail="Search failed") from e
 
 
 # Implement health check endpoint
