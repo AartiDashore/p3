@@ -58,7 +58,7 @@ class CrossEncoderReranker:
         scores = self.model.predict(pairs)
 
         # Adding the rerank scores to the documents
-        for doc, score in zip(documents, scores):
+        for doc, score in zip(documents, scores, strict=True):
             doc["rerank_score"] = float(score)
 
         # Sorting by rerank score (highest first) and then returning the top-k
