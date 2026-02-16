@@ -1,18 +1,50 @@
-# Lab 4: Document Retrieval System
+# P2: Advanced Document Retrieval System
 
-Semantic search system using ChromaDB and sentence transformers for ARIN 5360.
+Advanced document retrieval system for ARIN 5360.
 
-This project implements a document retrieval system that uses vector embeddings and semantic search to find relevant information across text and PDF documents. The system automatically chunks large documents into smaller, overlapping segments for more precise retrieval and better search results.
+This project enhances semantic search with cross-encoder reranking and hybrid search (BM25 + RRF) for production-grade document retrieval. The system implements a two-stage pipeline combining bi-encoder speed with cross-encoder accuracy - the same architecture used by Google and Elasticsearch.
 
+## Programmatic Usage
 
-### Chunking:
-Let's have a look at what this project is intended to perform:
+#### Comparing different approaches
+query = "machine learning algorithms"
 
-Chunking results from dracula text file:
-![chunking_results_from_dracula_text_file](/images/q5.png)
+Mode 1: Baseline (Semantic Only)
+```python
+from retrieval.retriever import DocumentRetriever
 
-Chunking results from MSAI pdf file:
-![chunking_results_from_msai_pdf_file](/images/q5_1.png)
+retriever = DocumentRetriever(use_reranking=False, use_hybrid=False)
+retriever.index_documents("documents")
+results = retriever.search(query, n_results=5)
+```
+Mode 2: With Reranking
+```python
+retriever = DocumentRetriever(use_reranking=True, use_hybrid=False)
+retriever.index_documents("documents")
+results = retriever.search(query, n_results=5)
+# Results include rerank_score field
+```
+Mode 3: Hybrid Search
+```python
+retriever = DocumentRetriever(use_reranking=False, use_hybrid=True)
+retriever.index_documents("documents")
+results = retriever.search(query, n_results=5)
+# Results include rrf_score field
+```
+Mode 4: Full System (All Features)
+```python
+retriever = DocumentRetriever(use_reranking=True, use_hybrid=True)
+retriever.index_documents("documents")
+results = retriever.search(query, n_results=5)
+# Results include both rerank_score and rrf_score
+```
+
+#### Results:
+Executing in terminal:
+![evaluation_modes_run](\evaluate_modes_images\eval_1.png)
+
+Output:
+![output_evaluation_modes](\evaluate_modes_images\eval_2.png)
 
 ## Quick Start
 
@@ -76,32 +108,9 @@ L3-retriever/
 │   ├── 01_cloud_onboarding.txt
 │   ├── 02_password_reset.txt
 │   ├── 03_ml_model_deployment.txt
-│   ├── 04_api_rate_limits.txt
-│   ├── 05_database_backup.txt
-│   ├── 06_incident_response.txt
-│   ├── 07_kubernetes_scaling.txt
-│   ├── 08_data_privacy_policy.txt
-│   ├── 09_logging_best_practices.txt
-│   ├── 10_network_troubleshooting.txt
-│   ├── 11_frontend_deployment.txt
-│   ├── 12_git_workflow.txt
-│   ├── 13_monitoring_alerts.txt
-│   ├── 14_security_audit.txt
-│   ├── 15_ci_cd_pipeline.txt
-│   ├── 16_data_pipeline_overview.txt
-│   ├── 17_customer_support_process.txt
-│   ├── 18_api_authentication.txt
-│   ├── 19_code_review_guidelines.txt
-│   ├── 20_release_management.txt
-│   ├── 21_data_retention.txt
-│   ├── 22_access_control.txt
-│   ├── 23_performance_testing.txt
-│   ├── 24_disaster_recovery.txt
-│   ├── 25_api_versioning.txt
-│   ├── 26_training_new_engineers.txt
-│   ├── 27_remote_work_policy.txt
 │   ├── 28_cloud_cost_optimization.txt
 │   ├── 29_feature_flag_usage.txt
+│   ├── ...
 │   ├── 30_internal_wiki_usage.txt
 │   ├── dracula_by_bram_stoker.txt
 │   ├── MSAI-courses.pdf
@@ -110,6 +119,11 @@ L3-retriever/
 │   ├── sample3.txt
 │   └── sample4.txt
 │
+├── evaluate_modes_images/
+│   ├── eval_1.png
+│   └── eval_2.png
+├── evaluate_modes.py
+|
 ├── images/
 │   ├── q5_1.png
 │   └── q5.png
@@ -156,18 +170,5 @@ L3-retriever/
 - Retriever: Coordinates components for end-to-end retrieval
 - API: FastAPI endpoints for heath checks and search
 - Chunking: Test file for document chunking and document loader.
-
-# Adding Documents
-
-Place .txt and .pdf files in the `documents/` directory and restart the server. Documents are indexed automatic startup.
-
-# Screenshot
-
-![API_Web_Interface](image2.png)
-
-# Video Links:
-Lab3 Retrieval:
-https://youtu.be/mrfsLGAVN8o
-
-Lab4: Chunking:
-https://youtu.be/BoKSugwwzys
+- Reranker: CrossEncoderReranker class
+- Rybrid: BM25 + RRF implementation
