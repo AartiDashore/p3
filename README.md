@@ -41,10 +41,10 @@ results = retriever.search(query, n_results=5)
 
 #### Results:
 Executing in terminal:
-![evaluation_modes_run](\evaluate_modes_images\eval_1.png)
+![evaluation_modes_run](evaluate_modes_images/eval_1.png)
 
 Output:
-![output_evaluation_modes](\evaluate_modes_images\eval_2.png)
+![output_evaluation_modes](evaluate_modes_images/eval_2.png)
 
 ## Quick Start
 
