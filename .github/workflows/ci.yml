@@ -30,7 +30,7 @@ jobs:
       run: uv run ruff check .
 
     - name: Type check with mypy
-      run: uv run mypy src/retrieval
+      run: MYPYPATH=src uv run mypy src/retrieval
 
     - name: Run tests with pytest
       run: uv run pytest --cov=src/retrieval --cov-report=xml --cov-report=term

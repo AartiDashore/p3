@@ -78,3 +78,4 @@ indent-style = "space"
 [tool.mypy]
 python_version = "3.11"
 ignore_missing_imports = true
+mypy_path = "src"
