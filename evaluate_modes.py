@@ -28,6 +28,6 @@ full_system.index_documents("documents")
 hybrid_results = full_system.search(query, n_results=5)
 
 # Show the differences
-print("Top result without reranking:", baseline_results[0]['id'])
-print("Top result with reranking:", rerank_results[0]['id'])
-print("Top result with hybrid+reranking:", hybrid_results[0]['id'])
+print("Top result without reranking:", baseline_results[0]["id"])
+print("Top result with reranking:", rerank_results[0]["id"])
+print("Top result with hybrid+reranking:", hybrid_results[0]["id"])
