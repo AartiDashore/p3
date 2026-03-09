@@ -12,7 +12,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from src.retrieval.embeddings import DocumentEmbedder
+from retrieval.embeddings import DocumentEmbedder
 
 EMBED_DIM = 384  # all-MiniLM-L6-v2 embedding size
 

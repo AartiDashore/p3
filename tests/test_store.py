@@ -13,8 +13,8 @@ import chromadb
 import pytest
 from chromadb import Settings
 
-from src.retrieval.embeddings import DocumentEmbedder
-from src.retrieval.store import VectorStore
+from retrieval.embeddings import DocumentEmbedder
+from retrieval.store import VectorStore
 
 
 @pytest.fixture

@@ -10,7 +10,7 @@ Seattle University, ARIN 5360
 import pytest
 from fastapi.testclient import TestClient
 
-from src.retrieval.main import app
+from retrieval.main import app
 
 
 @pytest.fixture
