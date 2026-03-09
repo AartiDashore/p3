@@ -32,3 +32,8 @@ Thumbs.db
 # - ignore all txt files in docuemnts directory EXCEPT samples
 documents/*.txt
 !documents/sample*.txt
+
+# Ignore all .env files but keep the .env.example
+.env
+*.env
+!.env.example
