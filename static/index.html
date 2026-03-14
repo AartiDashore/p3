@@ -1,486 +1,163 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <!--
-@author: Aarti Dashore, Alok Katiyar
+@author: Aarti Dashore
 Seattle University, ARIN 5360
-@version: 1.0.0+w26
+@version: 3.0.0+w26
 -->
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Document Retrieval System — ARIN 5360</title>
-
-  <!-- FastAPI serves CSS at /static/style.css -->
-  <link rel="stylesheet" href="/static/style.css?v=1" />
+  <title>Galactic Gadgets-RAG Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
-
 <body>
-  <!-- background orbs -->
-  <div class="bg-orb orb-1"></div>
-  <div class="bg-orb orb-2"></div>
-  <div class="bg-orb orb-3"></div>
 
-  <div class="page">
-    <!-- Header -->
-    <header class="topbar">
-      <div class="title-block">
-        <div class="app-icon" aria-hidden="true"></div>
-        <div>
-          <div class="app-title">Document Retrieval System</div>
-          <div class="app-subtitle">
-            Semantic search using ChromaDB + sentence transformers
-          </div>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-icon">🚀</div>
+        <div class="logo-text">
+          <div class="logo-title">Galactic Gadgets</div>
+          <div class="logo-sub">RAG Assistant</div>
+        </div>
+      </div>
+      <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar">‹</button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Settings</div>
+
+      <div class="setting-group">
+        <label class="setting-label">
+          Temperature
+          <span class="setting-value" id="tempValue">0.7</span>
+        </label>
+        <input type="range" class="slider" id="tempSlider" min="0" max="1" step="0.1" value="0.7" />
+        <div class="setting-hint">Lower = more focused, Higher = more creative</div>
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label">
+          Context Documents
+          <span class="setting-value" id="ctxValue">3</span>
+        </label>
+        <input type="range" class="slider" id="ctxSlider" min="1" max="10" step="1" value="3" />
+        <div class="setting-hint">Number of documents to retrieve</div>
+      </div>
+
+      <div class="setting-group" id="searchControlsGroup">
+        <div class="setting-label">Search Strategy</div>
+        <div class="toggle-row">
+          <label class="toggle-label">
+            <div class="toggle-switch">
+              <input type="checkbox" id="hybridToggle" />
+              <span class="toggle-track"></span>
+            </div>
+            Hybrid Search
+          </label>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle-label">
+            <div class="toggle-switch">
+              <input type="checkbox" id="rerankToggle" checked />
+              <span class="toggle-track"></span>
+            </div>
+            Reranking
+          </label>
+        </div>
+        <div class="strategy-badge" id="strategyBadge">Semantic + Reranking</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Documents</div>
+      <div class="doc-stats" id="docStats">
+        <div class="stat-row">
+          <span class="stat-label">Indexed</span>
+          <span class="stat-val" id="docCount">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Status</span>
+          <span class="stat-val status-indicator" id="statusIndicator">checking...</span>
         </div>
       </div>
 
-      <div class="meta-block">
-        <div class="meta-line">ARIN 5360 • Seattle University</div>
-        <div class="meta-line">Authors: Aarti Dashore, Alok Katiyar</div>
+      <!-- Document Upload (Option E) -->
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">📂</div>
+        <div class="upload-text">Drop files here or</div>
+        <label class="upload-btn" for="fileInput">Browse files</label>
+        <input type="file" id="fileInput" accept=".txt,.pdf" multiple hidden />
+        <div class="upload-hint">.txt and .pdf supported</div>
+      </div>
+      <div class="upload-progress" id="uploadProgress" style="display:none">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-text" id="progressText">Uploading...</div>
+      </div>
 
-        <div class="status-row">
-          <span class="status-pill unknown" id="statusPill">
-            <span class="status-dot unknown" id="statusDot"></span>
-            <span id="statusText">Checking…</span>
-          </span>
-          <span class="docs-pill" id="docsPill">Docs: —</span>
-        </div>
+      <div class="doc-list" id="docList"></div>
+    </div>
 
-        <div class="meta-line faint">API: <span id="apiBase">—</span></div>
+    <div class="sidebar-footer">
+      <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+        <span id="themeIcon">☀️</span>
+        <span id="themeLabel">Light mode</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main chat area -->
+  <main class="chat-main" id="chatMain">
+    <header class="chat-header">
+      <button class="menu-btn" id="menuBtn" title="Toggle sidebar">☰</button>
+      <div class="chat-header-info">
+        <div class="chat-header-title">RAG Assistant</div>
+        <div class="chat-header-sub" id="headerSub">Ready to answer questions</div>
+      </div>
+      <div class="header-actions">
+        <button class="header-btn" id="clearBtn" title="Clear conversation">🗑 Clear</button>
+        <button class="header-btn" id="exportBtn" title="Export chat">⬇ Export</button>
       </div>
     </header>
 
-    <!-- Main -->
-    <main class="grid">
-      <!-- Left: Search -->
-      <section class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Search</div>
-            <div class="card-right-hint">Ask a question or type keywords</div>
-          </div>
+    <div class="chat-history" id="chatHistory">
+      <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-icon">🛸</div>
+        <div class="welcome-title">Ask Galactic Gadgets anything</div>
+        <div class="welcome-sub">I'll search through the documentation and give you accurate, cited answers.</div>
+        <div class="welcome-chips">
+          <button class="welcome-chip" onclick="fillQuestion('What products do you offer?')">What products do you offer?</button>
+          <button class="welcome-chip" onclick="fillQuestion('How do I troubleshoot connectivity issues?')">Troubleshoot connectivity</button>
+          <button class="welcome-chip" onclick="fillQuestion('What are the technical specifications?')">Technical specifications</button>
+          <button class="welcome-chip" onclick="fillQuestion('How do I get started?')">How do I get started?</button>
         </div>
+      </div>
+    </div>
 
-        <div class="search-area">
-          <label class="label" for="queryInput">Query</label>
-          <input
-            id="queryInput"
-            class="input"
-            type="text"
-            placeholder="e.g., API auth, password reset, incident response..."
-            autocomplete="off"
-          />
+    <div class="chat-input-area">
+      <div class="input-wrapper">
+        <textarea
+          id="questionInput"
+          class="chat-input"
+          placeholder="Ask a question... (Enter to send, Shift+Enter for newline)"
+          rows="1"
+        ></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <span class="send-icon">↑</span>
+        </button>
+      </div>
+      <div class="input-hint">
+        <span>Enter ↵ to send • Shift+Enter for newline</span>
+        <span id="charCount"></span>
+      </div>
+    </div>
+  </main>
 
-          <div class="row">
-            <div class="field">
-              <label class="label" for="topK">Top-K</label>
-              <select id="topK" class="select">
-                <option value="3">3</option>
-                <option value="5" selected>5</option>
-                <option value="10">10</option>
-                <option value="15">15</option>
-                <option value="20">20</option>
-              </select>
-            </div>
-
-            <div class="field grow">
-              <label class="label">Quick examples</label>
-              <div class="chips">
-                <button class="chip" type="button" onclick="fillQuery('API auth')">API auth</button>
-                <button class="chip" type="button" onclick="fillQuery('password reset')">password reset</button>
-                <button class="chip" type="button" onclick="fillQuery('security audit')">security audit</button>
-                <button class="chip" type="button" onclick="fillQuery('logging best practices')">logging</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="thresholds">
-            <div class="threshold-title">Grouping thresholds (distance)</div>
-            <div class="threshold-grid">
-              <div class="threshold-item">
-                <span class="legend-dot good"></span>
-                <span><b>Closely matched</b> ≤ <span id="tHigh">0.90</span></span>
-              </div>
-              <div class="threshold-item">
-                <span class="legend-dot warn"></span>
-                <span><b>Moderately relevant</b> ≤ <span id="tMed">1.20</span></span>
-              </div>
-              <div class="threshold-item">
-                <span class="legend-dot gray"></span>
-                <span><b>Loosely related</b> &gt; <span id="tMed2">1.20</span></span>
-              </div>
-            </div>
-
-            <div class="sliders">
-              <div class="slider-item">
-                <label class="label" for="highThresh">High relevance</label>
-                <input id="highThresh" type="range" min="0.40" max="1.50" step="0.01" value="0.90" />
-              </div>
-              <div class="slider-item">
-                <label class="label" for="medThresh">Medium relevance</label>
-                <input id="medThresh" type="range" min="0.50" max="2.00" step="0.01" value="1.20" />
-              </div>
-            </div>
-
-            <div class="helper">
-              Tip: Lower distance means higher similarity. Adjust thresholds to match your dataset.
-            </div>
-          </div>
-
-          <div class="actions">
-            <button class="btn btn-primary" id="searchButton" type="button" onclick="performSearch()">
-              Search
-            </button>
-            <button class="btn btn-ghost" type="button" onclick="clearQuery()">Clear</button>
-          </div>
-
-          <div class="helper">
-            Press <b>Enter</b> to search. This UI calls <code>/search</code> and <code>/health</code>.
-          </div>
-        </div>
-      </section>
-
-      <!-- Right: Results -->
-      <section class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Results</div>
-            <div class="card-right-hint">Top-ranked matches grouped by relevance</div>
-          </div>
-          <button class="btn btn-ghost" type="button" onclick="clearResults()">Clear Results</button>
-        </div>
-
-        <div id="results" class="results">
-          <div class="empty">
-            <div class="empty-icon">🔎</div>
-            <div class="empty-title">No search yet</div>
-            <div class="empty-text">Run a query to see results grouped into relevance planes.</div>
-          </div>
-        </div>
-
-        <div class="notes">
-          <div class="notes-title">Notes</div>
-          <ul>
-            <li>POST <code>/search</code> with <code>{ "query": "...", "n_results": 5 }</code></li>
-            <li>GET <code>/health</code> shows readiness and indexed document count</li>
-            <li>Results are grouped using distance thresholds</li>
-          </ul>
-          <div class="footerline">© 2026 • Built for ARIN 5360</div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <script>
-    // --- Elements
-    const queryInput = document.getElementById("queryInput");
-    const resultsDiv = document.getElementById("results");
-    const searchButton = document.getElementById("searchButton");
-    const topK = document.getElementById("topK");
-
-    const highThreshEl = document.getElementById("highThresh");
-    const medThreshEl = document.getElementById("medThresh");
-
-    const tHigh = document.getElementById("tHigh");
-    const tMed = document.getElementById("tMed");
-    const tMed2 = document.getElementById("tMed2");
-
-    // Keep last search so sliders can re-render
-    let lastQuery = null;
-    let lastResults = null;
-
-    // Display API origin
-    document.getElementById("apiBase").textContent = window.location.origin;
-
-    // --- Helpers
-    function escapeHtml(str) {
-      return String(str)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    async function safeReadJson(response) {
-      const text = await response.text();
-      try {
-        return { ok: response.ok, data: JSON.parse(text) };
-      } catch {
-        return { ok: response.ok, data: { detail: text || "Unknown server response" } };
-      }
-    }
-
-    function setSearching(isSearching) {
-      searchButton.disabled = isSearching;
-      queryInput.disabled = isSearching;
-      topK.disabled = isSearching;
-      highThreshEl.disabled = isSearching;
-      medThreshEl.disabled = isSearching;
-      searchButton.textContent = isSearching ? "Searching..." : "Search";
-    }
-
-    function fillQuery(text) {
-      queryInput.value = text;
-      queryInput.focus();
-    }
-
-    function clearQuery() {
-      queryInput.value = "";
-      queryInput.focus();
-    }
-
-    function clearResults() {
-      lastQuery = null;
-      lastResults = null;
-      resultsDiv.innerHTML = `
-        <div class="empty">
-          <div class="empty-icon">🧾</div>
-          <div class="empty-title">Results cleared</div>
-          <div class="empty-text">Run another query to populate results.</div>
-        </div>
-      `;
-    }
-
-    // --- Health pill
-    function setStatus(kind, text, docs) {
-      const pill = document.getElementById("statusPill");
-      const dot = document.getElementById("statusDot");
-      const label = document.getElementById("statusText");
-      const docsPill = document.getElementById("docsPill");
-
-      pill.classList.remove("ok", "bad", "unknown");
-      dot.classList.remove("ok", "bad", "unknown");
-
-      pill.classList.add(kind);
-      dot.classList.add(kind);
-
-      label.textContent = text;
-      docsPill.textContent = `Docs: ${docs ?? "—"}`;
-    }
-
-    async function refreshHealth() {
-      setStatus("unknown", "Checking…", "—");
-      try {
-        const response = await fetch("/health");
-        const { ok, data } = await safeReadJson(response);
-
-        if (!ok) {
-          setStatus("bad", "Offline", "—");
-          return;
-        }
-
-        const status = String(data.status ?? "OK");
-        const docs = data.documents_indexed ?? 0;
-        const norm = status.toLowerCase();
-        const good = norm.includes("healthy") || norm.includes("ok") || norm.includes("up");
-
-        setStatus(good ? "ok" : "unknown", status, docs);
-      } catch {
-        setStatus("bad", "Offline", "—");
-      }
-    }
-
-    // --- Rendering
-    function renderSkeleton() {
-      resultsDiv.innerHTML = `
-        <div class="skeleton">
-          <div class="sk-line"></div>
-          <div class="sk-card"></div>
-          <div class="sk-card"></div>
-          <div class="sk-card"></div>
-        </div>
-      `;
-    }
-
-    function renderMessage(type, title, body) {
-      resultsDiv.innerHTML = `
-        <div class="msg ${type}">
-          <div class="msg-title">${escapeHtml(title)}</div>
-          <div class="msg-body">${escapeHtml(body)}</div>
-        </div>
-      `;
-    }
-
-    function copyText(text) {
-      try { navigator.clipboard.writeText(text); } catch { /* ignore */ }
-    }
-
-    function renderSection(title, items, level, thresholdText) {
-      let section = `
-        <div class="section ${level}">
-          <div class="section-header">
-            <div class="section-title">${title}</div>
-            <div class="section-meta">${thresholdText}</div>
-          </div>
-          <div class="result-list">
-      `;
-
-      items.forEach((r, idx) => {
-        const id = escapeHtml(r.id ?? `doc-${idx + 1}`);
-        const text = escapeHtml(r.text ?? "");
-        const dist = typeof r.distance === "number" ? r.distance.toFixed(3) : "—";
-
-        section += `
-          <div class="result ${level}">
-            <div class="result-top">
-              <div class="left">
-                <span class="rank">#${idx + 1}</span>
-                <span class="docid">${id}</span>
-              </div>
-              <div class="right">
-                <span class="score">distance ${dist}</span>
-                <button class="copy" type="button" onclick="copyText(${JSON.stringify(r.text ?? "")})">Copy</button>
-              </div>
-            </div>
-            <div class="snippet">${text}</div>
-          </div>
-        `;
-      });
-
-      section += `</div></div>`;
-      return section;
-    }
-
-    function renderGroupedResults(query, results) {
-      const highT = Number(highThreshEl.value);
-      const medT = Number(medThreshEl.value);
-
-      // ensure ordering makes sense
-      const highThresh = Math.min(highT, medT);
-      const medThresh = Math.max(highT, medT);
-
-      tHigh.textContent = highThresh.toFixed(2);
-      tMed.textContent = medThresh.toFixed(2);
-      tMed2.textContent = medThresh.toFixed(2);
-
-      const high = [];
-      const medium = [];
-      const low = [];
-
-      results.forEach(r => {
-        const d = typeof r.distance === "number" ? r.distance : 999;
-        if (d <= highThresh) high.push(r);
-        else if (d <= medThresh) medium.push(r);
-        else low.push(r);
-      });
-
-      // If user asked for TopK, the server already limited it — keep the same order.
-      // But rank should be per-plane as requested.
-      let html = `
-        <div class="results-head">
-          <div class="results-title">Results for “${escapeHtml(query)}”</div>
-          <div class="results-sub">Grouped into relevance planes using distance thresholds</div>
-        </div>
-      `;
-
-      if (high.length) {
-        html += renderSection(
-          "🟢 Closely matched",
-          high,
-          "high",
-          `distance ≤ ${highThresh.toFixed(2)}`
-        );
-      }
-
-      if (medium.length) {
-        html += renderSection(
-          "🟡 Moderately relevant",
-          medium,
-          "medium",
-          `${highThresh.toFixed(2)} < distance ≤ ${medThresh.toFixed(2)}`
-        );
-      }
-
-      if (low.length) {
-        html += renderSection(
-          "⚪ Loosely related",
-          low,
-          "low",
-          `distance > ${medThresh.toFixed(2)}`
-        );
-      }
-
-      if (!high.length && !medium.length && !low.length) {
-        html += `
-          <div class="empty">
-            <div class="empty-title">No results</div>
-            <div class="empty-text">Try a different query.</div>
-          </div>
-        `;
-      }
-
-      resultsDiv.innerHTML = html;
-    }
-
-    // --- Search
-    async function performSearch() {
-      const query = queryInput.value;
-
-      if (!query.trim()) {
-        renderMessage("warn", "Missing query", "Please enter a search query.");
-        return;
-      }
-
-      setSearching(true);
-      renderSkeleton();
-
-      try {
-        const response = await fetch("/search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, n_results: Number(topK.value) })
-        });
-
-        const { ok, data } = await safeReadJson(response);
-
-        if (!ok) {
-          renderMessage("error", "Search error", data.detail ?? "Request failed");
-          return;
-        }
-
-        const results = Array.isArray(data.results) ? data.results : [];
-        if (results.length === 0) {
-          renderMessage("warn", "No results", "Try fewer words or different phrasing.");
-          return;
-        }
-
-        lastQuery = data.query ?? query;
-        lastResults = results;
-
-        renderGroupedResults(lastQuery, lastResults);
-      } catch (e) {
-        renderMessage("error", "Connection failed", "Could not reach /search endpoint.");
-      } finally {
-        setSearching(false);
-      }
-    }
-
-    // --- Slider live updates (re-render last results)
-    function maybeRerender() {
-      if (lastQuery && lastResults) {
-        renderGroupedResults(lastQuery, lastResults);
-      } else {
-        // update the displayed threshold numbers even before first search
-        const highT = Math.min(Number(highThreshEl.value), Number(medThreshEl.value));
-        const medT = Math.max(Number(highThreshEl.value), Number(medThreshEl.value));
-        tHigh.textContent = highT.toFixed(2);
-        tMed.textContent = medT.toFixed(2);
-        tMed2.textContent = medT.toFixed(2);
-      }
-    }
-
-    highThreshEl.addEventListener("input", maybeRerender);
-    medThreshEl.addEventListener("input", maybeRerender);
-
-    // Enter key triggers search
-    queryInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") performSearch();
-    });
-
-    // Startup
-    maybeRerender();
-    refreshHealth();
-    setInterval(refreshHealth, 30000);
-  </script>
+  <script src="/static/chat.js"></script>
 </body>
 </html>
