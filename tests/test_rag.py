@@ -170,7 +170,6 @@ def test_query_n_docs_retrieved(rag, mock_retriever):
 def test_query_uses_n_results_override(rag, mock_retriever):
     """Test that n_results parameter overrides default."""
     rag.query("test", n_results=7)
-    call_args = mock_retriever.search.call_args
     args, kwargs = mock_retriever.search.call_args
     assert (len(args) > 1 and args[1] == 7) or kwargs.get("n_results") == 7
 

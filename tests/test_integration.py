@@ -178,6 +178,7 @@ def test_rag_invalid_temperature_returns_400(client):
     res = client.post("/rag", json={"question": "test", "temperature": 5.0})
     assert res.status_code == 400
 
+
 # ── /documents ────────────────────────────────────────────
 def test_documents_list_returns_200(client):
     """Documents list endpoint returns 200."""
