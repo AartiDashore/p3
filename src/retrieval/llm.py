@@ -6,6 +6,8 @@ Seattle University, ARIN 5360
 @version: 4.0.0+w26
 """
 
+import os
+
 import httpx
 
 
@@ -15,7 +17,7 @@ class LLMClient:
         base_url: str = "http://localhost:11434",
         model: str = "qwen2.5:3b",
         api_key: str | None = None,
-        timeout: float = 30.0,
+        timeout: float = float(os.getenv("LLM_TIMEOUT", "180.0")),
     ):
         self.base_url = base_url.rstrip("/")
         self.model = model
