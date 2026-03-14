@@ -29,7 +29,7 @@ async def test_lifespan_success_sets_retriever(monkeypatch):
     """Cover normal lifespan path where DocumentRetriever() succeeds."""
 
     class GoodRetriever:
-        def __init__(self):
+        def __init__(self, use_reranking=True, use_hybrid=False):
             pass
 
         @property
