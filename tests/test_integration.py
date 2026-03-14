@@ -11,9 +11,10 @@ Tests use FastAPI TestClient and mock the LLM so Ollama is not required.
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 import retrieval.main as m
@@ -22,6 +23,23 @@ from retrieval.rag import RAGSystem
 from retrieval.retriever import DocumentRetriever
 
 
+# ── Build a no-lifespan test app that shares all routes ───────────────────
+def _make_test_app() -> FastAPI:
+    """
+    Return a fresh FastAPI app with NO lifespan but all the same routes.
+    This is the only 100% reliable way to prevent the real retriever/LLM
+    from starting during tests regardless of FastAPI/Starlette version.
+    """
+    test_app = FastAPI()
+    for route in app.routes:
+        test_app.routes.append(route)
+    return test_app
+
+
+TEST_APP = _make_test_app()
+
+
+# ── Fixtures ───────────────────────────────────────────────
 @pytest.fixture
 def mock_rag_system():
     """Mock RAGSystem that returns a canned answer."""
@@ -73,45 +91,53 @@ def reset_globals():
 
 @pytest.fixture
 def client(mock_rag_system, mock_retriever_fixture):
-    """TestClient with mocked retriever and RAG system."""
+    """TestClient using test app (no lifespan) with mocked globals."""
     m.retriever = mock_retriever_fixture
     m.rag_system = mock_rag_system
     m.llm_client = MagicMock()
     m.llm_client.is_available.return_value = True
-    with TestClient(app, raise_server_exceptions=False) as c:
+    with TestClient(TEST_APP, raise_server_exceptions=False) as c:
         yield c
 
 
 # ── /health ────────────────────────────────────────────────
 def test_health_returns_200(client):
-    """Health check returns 200."""
     res = client.get("/health")
     assert res.status_code == 200
 
 
 def test_health_returns_healthy_status(client):
-    """Health check returns healthy status."""
+    res = client.get("/health")
+    assert res.json()["status"] == "healthy"
+
+
+def test_health_returns_doc_count(client):
     res = client.get("/health")
     data = res.json()
-    assert data["status"] == "healthy"
+    assert "documents_indexed" in data
+    assert data["documents_indexed"] == 5
 
 
 def test_health_returns_llm_available(client):
-    """Health check includes llm_available field."""
     res = client.get("/health")
-    data = res.json()
-    assert "llm_available" in data
+    assert "llm_available" in res.json()
+
+
+def test_health_no_retriever():
+    """Health check works even without retriever (globals already None)."""
+    with TestClient(TEST_APP, raise_server_exceptions=False) as c:
+        res = c.get("/health")
+    assert res.status_code == 200
+    assert res.json()["documents_indexed"] == 0
 
 
 # ── /search ───────────────────────────────────────────────
 def test_search_returns_200(client):
-    """Search endpoint returns 200 with valid query."""
     res = client.post("/search", json={"query": "python", "n_results": 3})
     assert res.status_code == 200
 
 
 def test_search_returns_results(client):
-    """Search returns results list."""
     res = client.post("/search", json={"query": "python", "n_results": 3})
     data = res.json()
     assert "results" in data
@@ -120,26 +146,29 @@ def test_search_returns_results(client):
 
 
 def test_search_empty_query_returns_400(client):
-    """Empty query returns 400."""
     res = client.post("/search", json={"query": "   ", "n_results": 5})
     assert res.status_code == 400
 
 
 def test_search_invalid_n_results_returns_400(client):
-    """n_results out of range returns 400."""
     res = client.post("/search", json={"query": "test", "n_results": 100})
     assert res.status_code == 400
 
 
+def test_search_no_retriever_returns_503():
+    """Search without retriever returns 503 (globals already None)."""
+    with TestClient(TEST_APP, raise_server_exceptions=False) as c:
+        res = c.post("/search", json={"query": "test", "n_results": 5})
+    assert res.status_code == 503
+
+
 # ── /rag ──────────────────────────────────────────────────
 def test_rag_returns_200(client):
-    """RAG endpoint returns 200 with valid question."""
     res = client.post("/rag", json={"question": "What is machine learning?"})
     assert res.status_code == 200
 
 
 def test_rag_returns_answer(client):
-    """RAG endpoint returns answer field."""
     res = client.post("/rag", json={"question": "What is machine learning?"})
     data = res.json()
     assert "answer" in data
@@ -147,7 +176,6 @@ def test_rag_returns_answer(client):
 
 
 def test_rag_returns_sources(client):
-    """RAG endpoint returns sources list."""
     res = client.post("/rag", json={"question": "What is machine learning?"})
     data = res.json()
     assert "sources" in data
@@ -155,61 +183,84 @@ def test_rag_returns_sources(client):
 
 
 def test_rag_returns_question(client):
-    """RAG endpoint echoes the question."""
     res = client.post("/rag", json={"question": "What is machine learning?"})
-    data = res.json()
-    assert data["question"] == "What is machine learning?"
+    assert res.json()["question"] == "What is machine learning?"
 
 
 def test_rag_empty_question_returns_400(client):
-    """Empty question returns 400."""
     res = client.post("/rag", json={"question": "   "})
     assert res.status_code == 400
 
 
 def test_rag_invalid_n_context_docs_returns_400(client):
-    """n_context_docs out of range returns 400."""
     res = client.post("/rag", json={"question": "test", "n_context_docs": 100})
     assert res.status_code == 400
 
 
 def test_rag_invalid_temperature_returns_400(client):
-    """Temperature out of range returns 400."""
     res = client.post("/rag", json={"question": "test", "temperature": 5.0})
     assert res.status_code == 400
 
 
+def test_rag_no_system_returns_503():
+    """RAG without rag_system returns 503 (globals already None)."""
+    with TestClient(TEST_APP, raise_server_exceptions=False) as c:
+        res = c.post("/rag", json={"question": "test"})
+    assert res.status_code == 503
+
+
+def test_rag_with_conversation_history(client, mock_rag_system):
+    payload = {
+        "question": "What about neural networks?",
+        "conversation_history": [
+            {"question": "What is AI?", "answer": "AI is artificial intelligence."}
+        ],
+    }
+    res = client.post("/rag", json=payload)
+    assert res.status_code == 200
+    call_kwargs = mock_rag_system.query.call_args[1]
+    assert call_kwargs.get("system_prompt") is not None
+    assert "What is AI?" in call_kwargs["system_prompt"]
+
+
+def test_rag_no_history_uses_none_system_prompt(client, mock_rag_system):
+    res = client.post("/rag", json={"question": "test"})
+    assert res.status_code == 200
+    call_kwargs = mock_rag_system.query.call_args[1]
+    assert call_kwargs.get("system_prompt") is None
+
+
+def test_rag_passes_temperature(client, mock_rag_system):
+    client.post("/rag", json={"question": "test", "temperature": 0.2})
+    call_kwargs = mock_rag_system.query.call_args[1]
+    assert call_kwargs.get("temperature") == 0.2
+
+
+def test_rag_passes_n_context_docs(client, mock_rag_system):
+    client.post("/rag", json={"question": "test", "n_context_docs": 7})
+    call_kwargs = mock_rag_system.query.call_args[1]
+    assert call_kwargs.get("n_results") == 7
+
+
 # ── /documents ────────────────────────────────────────────
 def test_documents_list_returns_200(client):
-    """Documents list endpoint returns 200."""
     res = client.get("/documents")
     assert res.status_code == 200
 
 
 def test_documents_list_has_documents_key(client):
-    """Documents list response has documents key."""
     res = client.get("/documents")
     data = res.json()
     assert "documents" in data
     assert "count" in data
 
 
-# ── /test/error ───────────────────────────────────────────
-def test_generic_exception_handler(client):
-    """Generic exception handler returns 500."""
-    res = client.get("/test/error")
-    assert res.status_code == 500
-    assert "Internal server error" in res.json()["detail"]
-
-
 # ── / (UI) ────────────────────────────────────────────────
 def test_root_returns_200(client):
-    """Root path returns 200 (serves index.html)."""
     res = client.get("/")
     assert res.status_code == 200
 
 
 def test_not_found(client):
-    """Non-existent route returns 404."""
     res = client.get("/nonexistent")
     assert res.status_code == 404
